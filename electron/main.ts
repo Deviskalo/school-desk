@@ -26,7 +26,11 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
-    title: "SchoolDesk - Modern School Management",
+    title: "SchoolDesk",
+    icon: path.join(
+      __dirname,
+      isDev ? "../renderer/public/favicon.png" : "../renderer/dist/favicon.png",
+    ),
   });
 
   if (isDev) {

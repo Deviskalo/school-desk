@@ -68,10 +68,17 @@ const Sidebar: React.FC = () => {
   return (
     <div className="w-64 h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800">
       <div className="p-6">
-        <h1 className="text-2xl font-bold tracking-tight text-blue-400">
-          SchoolDesk
-        </h1>
-        <p className="text-slate-200 text-xs font-semibold mt-1 uppercase tracking-widest">
+        <div className="flex items-center space-x-3 mb-1">
+          <img
+            src="/logo.png"
+            alt="SchoolDesk Logo"
+            className="w-8 h-8 object-contain"
+          />
+          <h1 className="text-2xl font-bold tracking-tight text-blue-400">
+            SchoolDesk
+          </h1>
+        </div>
+        <p className="text-slate-200 text-xs font-semibold uppercase tracking-widest pl-11">
           {role}
         </p>
       </div>

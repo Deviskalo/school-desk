@@ -1,5 +1,6 @@
 {
-  "name": "schooldesk",
+  "name": "school-desk",
+  "productName": "SchoolDesk",
   "version": "1.0.0",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -45,6 +46,6 @@
     "zustand": "^5.0.3"
   },
   "workspaces": [
-    "renderer"
+    "school-desk-renderer"
   ]
 }
