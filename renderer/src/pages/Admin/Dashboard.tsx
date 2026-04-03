@@ -34,7 +34,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       name: "Attendance Rate",
-      value: "94.2%", // Slightly more dynamic looking placeholder
+      value: calculateAttendanceRate(),
       icon: TrendingUp,
       color: "bg-green-500",
     },

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getDB } from "@database/rxdb";
+import { teams, ID } from "@appwrite/client";
 
 export const useTeachers = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -19,14 +20,35 @@ export const useTeachers = () => {
     return () => sub?.unsubscribe();
   }, []);
 
-  const addTeacher = async (teacher: any) => {
+  const addTeacher = async (teacher: any, invite = true) => {
     const db = await getDB();
+    const teacherId = crypto.randomUUID();
+
+    const trimmedEmail = teacher.email?.trim();
+
+    if (invite && trimmedEmail && navigator.onLine) {
+      try {
+        await teams.createMembership(
+          "teachers",
+          ["teacher"],
+          `${window.location.origin}/setup`,
+          trimmedEmail,
+          ID.unique(),
+          undefined,
+          teacher.name,
+        );
+      } catch (error) {
+        console.error("Failed to send teacher invitation:", error);
+      }
+    }
+
     await db.teachers.insert({
-      id: crypto.randomUUID(),
+      id: teacherId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       synced: false,
-      deleted: false,
+      isDeleted: false,
+      status: invite ? "invited" : "active",
       ...teacher,
     });
   };
@@ -35,12 +57,16 @@ export const useTeachers = () => {
     const db = await getDB();
     const doc = await db.teachers.findOne(id).exec();
     if (doc) {
-      await doc.patch({ deleted: true, updatedAt: Date.now(), synced: false });
+      await doc.patch({
+        isDeleted: true,
+        updatedAt: Date.now(),
+        synced: false,
+      });
     }
   };
 
   return {
-    teachers: teachers.filter((t) => !t.deleted),
+    teachers: teachers.filter((t) => !t.isDeleted),
     loading,
     addTeacher,
     deleteTeacher,

@@ -13,11 +13,22 @@ import {
   submissionSchema,
 } from "./schemas";
 
+import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
+
 // Add plugins
 addRxPlugin(RxDBQueryBuilderPlugin);
 addRxPlugin(RxDBUpdatePlugin);
+addRxPlugin(RxDBMigrationPlugin);
 
 let dbPromise: Promise<any> | null = null;
+
+const migrationStrategies = {
+  1: (oldDoc: any) => {
+    oldDoc.isDeleted = oldDoc.deleted || false;
+    delete oldDoc.deleted;
+    return oldDoc;
+  },
+};
 
 const createDB = async () => {
   const db = await createRxDatabase({
@@ -28,13 +39,13 @@ const createDB = async () => {
   });
 
   await db.addCollections({
-    users: { schema: userSchema },
-    students: { schema: studentSchema },
-    teachers: { schema: teacherSchema },
-    attendance: { schema: attendanceSchema },
-    grades: { schema: gradeSchema },
-    assignments: { schema: assignmentSchema },
-    submissions: { schema: submissionSchema },
+    users: { schema: userSchema, migrationStrategies },
+    students: { schema: studentSchema, migrationStrategies },
+    teachers: { schema: teacherSchema, migrationStrategies },
+    attendance: { schema: attendanceSchema, migrationStrategies },
+    grades: { schema: gradeSchema, migrationStrategies },
+    assignments: { schema: assignmentSchema, migrationStrategies },
+    submissions: { schema: submissionSchema, migrationStrategies },
   });
 
   return db;

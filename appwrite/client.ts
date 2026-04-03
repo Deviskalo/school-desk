@@ -1,8 +1,7 @@
-import { Client, Account, Databases, Storage } from "appwrite";
+import { Client, Account, Databases, Storage, Teams, ID } from "appwrite";
 
 const client = new Client();
 
-client;
 const APPWRITE_ENDPOINT =
   (typeof process !== "undefined"
     ? process.env.VITE_APPWRITE_ENDPOINT
@@ -18,5 +17,7 @@ client.setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
+export const teams = new Teams(client);
+export { ID };
 
 export default client;

@@ -108,19 +108,29 @@ export class SyncEngine {
       );
 
       for (const remoteDoc of response.documents) {
-        const localDoc = await db[collectionName].findOne(remoteDoc.$id).exec();
+        // Separate metadata from actual data
+        const {
+          $id,
+          $collectionId,
+          $databaseId,
+          $createdAt,
+          $updatedAt,
+          $permissions,
+          ...data
+        } = remoteDoc;
+        const localDoc = await db[collectionName].findOne($id).exec();
 
         if (!localDoc) {
           await db[collectionName].insert({
-            ...remoteDoc,
-            id: remoteDoc.$id,
+            ...data,
+            id: $id,
             synced: true,
           });
         } else {
-          if (remoteDoc.updatedAt > localDoc.updatedAt) {
+          if (remoteDoc.updatedAt > (localDoc.updatedAt || 0)) {
             await localDoc.patch({
-              ...remoteDoc,
-              id: remoteDoc.$id,
+              ...data,
+              id: $id,
               synced: true,
             });
           }

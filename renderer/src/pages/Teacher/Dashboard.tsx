@@ -128,7 +128,10 @@ const TeacherDashboard: React.FC = () => {
           <div className="h-48 flex items-end space-x-4 px-4 pb-4">
             {/* Simple Dynamic Performance Bar Chart */}
             {[75, 82, 90, 65, 88, 95].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center">
+              <div
+                key={i}
+                className="flex-1 flex flex-col items-center h-full justify-end"
+              >
                 <div
                   className="w-full bg-blue-500/20 hover:bg-blue-500 rounded-t-lg transition-all duration-500"
                   style={{ height: `${h}%` }}

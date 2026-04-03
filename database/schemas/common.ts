@@ -14,7 +14,7 @@ export const commonFields = {
     type: "boolean",
     default: false,
   },
-  deleted: {
+  isDeleted: {
     type: "boolean",
     default: false,
   },

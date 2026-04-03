@@ -162,7 +162,7 @@ async function setup() {
   await createIntAttr(DATABASE_ID, "users", "createdAt");
   await createIntAttr(DATABASE_ID, "users", "updatedAt");
   await createBoolAttr(DATABASE_ID, "users", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "users", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "users", "isDeleted", false, false);
 
   // 3. Students
   await createCollection("students", "Students");
@@ -170,20 +170,34 @@ async function setup() {
   await createStringAttr(DATABASE_ID, "students", "email");
   await createStringAttr(DATABASE_ID, "students", "grade");
   await createStringAttr(DATABASE_ID, "students", "teacherId");
+  await createEnumAttr(
+    DATABASE_ID,
+    "students",
+    "status",
+    ["invited", "active"],
+    false,
+  );
   await createIntAttr(DATABASE_ID, "students", "createdAt");
   await createIntAttr(DATABASE_ID, "students", "updatedAt");
   await createBoolAttr(DATABASE_ID, "students", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "students", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "students", "isDeleted", false, false);
 
   // 4. Teachers
   await createCollection("teachers", "Teachers");
   await createStringAttr(DATABASE_ID, "teachers", "name", true);
   await createStringAttr(DATABASE_ID, "teachers", "email");
   await createStringAttr(DATABASE_ID, "teachers", "subject");
+  await createEnumAttr(
+    DATABASE_ID,
+    "teachers",
+    "status",
+    ["invited", "active"],
+    false,
+  );
   await createIntAttr(DATABASE_ID, "teachers", "createdAt");
   await createIntAttr(DATABASE_ID, "teachers", "updatedAt");
   await createBoolAttr(DATABASE_ID, "teachers", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "teachers", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "teachers", "isDeleted", false, false);
 
   // 5. Attendance
   await createCollection("attendance", "Attendance");
@@ -200,7 +214,7 @@ async function setup() {
   await createIntAttr(DATABASE_ID, "attendance", "createdAt");
   await createIntAttr(DATABASE_ID, "attendance", "updatedAt");
   await createBoolAttr(DATABASE_ID, "attendance", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "attendance", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "attendance", "isDeleted", false, false);
 
   // 6. Grades
   await createCollection("grades", "Grades");
@@ -211,7 +225,7 @@ async function setup() {
   await createIntAttr(DATABASE_ID, "grades", "createdAt");
   await createIntAttr(DATABASE_ID, "grades", "updatedAt");
   await createBoolAttr(DATABASE_ID, "grades", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "grades", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "grades", "isDeleted", false, false);
 
   // 7. Assignments
   await createCollection("assignments", "Assignments");
@@ -229,7 +243,7 @@ async function setup() {
   await createIntAttr(DATABASE_ID, "assignments", "createdAt");
   await createIntAttr(DATABASE_ID, "assignments", "updatedAt");
   await createBoolAttr(DATABASE_ID, "assignments", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "assignments", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "assignments", "isDeleted", false, false);
 
   // 8. Submissions
   await createCollection("submissions", "Submissions");
@@ -242,7 +256,7 @@ async function setup() {
   await createIntAttr(DATABASE_ID, "submissions", "createdAt");
   await createIntAttr(DATABASE_ID, "submissions", "updatedAt");
   await createBoolAttr(DATABASE_ID, "submissions", "synced", false, false);
-  await createBoolAttr(DATABASE_ID, "submissions", "deleted", false, false);
+  await createBoolAttr(DATABASE_ID, "submissions", "isDeleted", false, false);
 
   console.log("\n🎉 Setup complete! All collections are ready.\n");
 }

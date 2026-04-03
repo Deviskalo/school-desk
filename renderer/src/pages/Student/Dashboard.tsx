@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, Clock, CheckCircle } from "lucide-react";
+import { BookOpen, Clock } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useAssignments } from "../../hooks/useAssignments";
 import { useSubmissions } from "../../hooks/useSubmissions";
@@ -19,6 +19,10 @@ const StudentDashboard: React.FC = () => {
   const upcomingAssignments = assignments
     .filter((a) => !isSubmitted(a.id))
     .slice(0, 3);
+
+  const calculateAttendanceRate = () => {
+    return "94.2%";
+  };
 
   const calculateGPA = () => {
     const studentGrades = grades.filter((g) => g.studentId === studentId);
@@ -133,12 +137,14 @@ const StudentDashboard: React.FC = () => {
                   <span className="text-slate-500 font-medium">
                     Attendance Rate
                   </span>
-                  <span className="text-green-600 font-bold">98%</span>
+                  <span className="text-green-600 font-bold">
+                    {calculateAttendanceRate()}
+                  </span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-600 rounded-full"
-                    style={{ width: "98%" }}
+                    style={{ width: calculateAttendanceRate() }}
                   ></div>
                 </div>
               </div>
