@@ -20,6 +20,24 @@ const GradeList: React.FC = () => {
     setNewGrade({ studentId: "", subject: "", grade: "" });
   };
 
+  const calculateGPA = () => {
+    if (grades.length === 0) return "0.00";
+    const total = grades.reduce((sum, g) => {
+      const val = parseFloat(g.grade);
+      if (!isNaN(val)) return sum + val;
+      // Map letter grades if necessary
+      const map: Record<string, number> = {
+        A: 4.0,
+        B: 3.0,
+        C: 2.0,
+        D: 1.0,
+        F: 0.0,
+      };
+      return sum + (map[g.grade.toUpperCase()] || 0);
+    }, 0);
+    return (total / grades.length).toFixed(2);
+  };
+
   const getStudentName = (id: string) => {
     return students.find((s) => s.id === id)?.name || "Unknown Student";
   };
@@ -60,7 +78,7 @@ const GradeList: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-slate-500">Average GPA</p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                3.64
+                {calculateGPA()}
               </p>
             </div>
           </div>

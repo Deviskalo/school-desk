@@ -1,12 +1,57 @@
 import React from "react";
-import { BookOpen, Clock } from "lucide-react";
+import { BookOpen, Clock, CheckCircle } from "lucide-react";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useAssignments } from "../../hooks/useAssignments";
+import { useSubmissions } from "../../hooks/useSubmissions";
+import { useGrades } from "../../hooks/useGrades";
 
 const StudentDashboard: React.FC = () => {
+  const { user } = useAuthStore();
+  const studentId = (user?.prefs as any)?.studentId || "guest-student";
+  const { assignments, loading: assignmentsLoading } = useAssignments();
+  const { submissions, submitAssignment } = useSubmissions(studentId);
+  const { grades } = useGrades();
+
+  const isSubmitted = (assignmentId: string) => {
+    return submissions.some((s) => s.assignmentId === assignmentId);
+  };
+
+  const upcomingAssignments = assignments
+    .filter((a) => !isSubmitted(a.id))
+    .slice(0, 3);
+
+  const calculateGPA = () => {
+    const studentGrades = grades.filter((g) => g.studentId === studentId);
+    if (studentGrades.length === 0) return "0.0";
+    const total = studentGrades.reduce((sum, g) => {
+      const val = parseFloat(g.grade);
+      if (!isNaN(val)) return sum + val;
+      const map: Record<string, number> = {
+        A: 4.0,
+        B: 3.0,
+        C: 2.0,
+        D: 1.0,
+        F: 0.0,
+      };
+      return sum + (map[g.grade.toUpperCase()] || 0);
+    }, 0);
+    return (total / studentGrades.length).toFixed(1);
+  };
+
+  const handleLevelSubmit = async (assignmentId: string) => {
+    await submitAssignment({
+      assignmentId,
+      studentId,
+      content: "Submitted via Dashboard",
+      submittedAt: new Date().toISOString(),
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Welcome back, Student!
+          Welcome back, {user?.name || "Student"}!
         </h2>
         <p className="text-slate-500 mt-1">
           Here's an overview of your academic progress
@@ -20,29 +65,41 @@ const StudentDashboard: React.FC = () => {
               Upcoming Assignments
             </h3>
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                      <BookOpen size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white">
-                        Chemistry Quiz: Periodic Table
-                      </h4>
-                      <p className="text-xs text-slate-500 flex items-center mt-1">
-                        <Clock size={12} className="mr-1" /> Due in 2 days
-                      </p>
-                    </div>
-                  </div>
-                  <button className="bg-white dark:bg-slate-900 px-4 py-2 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-800">
-                    Submit
-                  </button>
+              {assignmentsLoading ? (
+                <div className="text-slate-400 italic">Loading...</div>
+              ) : upcomingAssignments.length === 0 ? (
+                <div className="text-slate-400 italic py-4">
+                  No upcoming assignments. You're all caught up!
                 </div>
-              ))}
+              ) : (
+                upcomingAssignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between p-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <BookOpen size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white">
+                          {assignment.title}
+                        </h4>
+                        <p className="text-xs text-slate-500 flex items-center mt-1">
+                          <Clock size={12} className="mr-1" /> Due:{" "}
+                          {assignment.dueDate}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleLevelSubmit(assignment.id)}
+                      className="bg-white dark:bg-slate-900 px-4 py-2 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-blue-600 hover:text-white transition-colors"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -58,12 +115,16 @@ const StudentDashboard: React.FC = () => {
                   <span className="text-slate-500 font-medium">
                     Academic GPA
                   </span>
-                  <span className="text-blue-600 font-bold">3.8 / 4.0</span>
+                  <span className="text-blue-600 font-bold">
+                    {calculateGPA()} / 4.0
+                  </span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-blue-600 rounded-full"
-                    style={{ width: "95%" }}
+                    style={{
+                      width: `${(parseFloat(calculateGPA()) / 4.0) * 100}%`,
+                    }}
                   ></div>
                 </div>
               </div>

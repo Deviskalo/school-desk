@@ -10,22 +10,32 @@ const APPWRITE_DATABASE_ID =
 export class SyncEngine {
   collections: string[];
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private onlineListener: () => void;
 
   constructor(collections: string[]) {
     this.collections = collections;
+    this.onlineListener = () => {
+      console.log("[Sync] Back online, triggering sync...");
+      this.sync();
+    };
   }
 
   async start() {
-    if (this.intervalId) return; // Already running
+    if (this.intervalId) return;
     console.log("Sync engine started");
-    this.intervalId = setInterval(() => this.sync(), 30000); // Every 30 seconds
-    this.sync(); // Initial sync
+
+    // Listen for network changes
+    window.addEventListener("online", this.onlineListener);
+
+    this.intervalId = setInterval(() => this.sync(), 30000);
+    this.sync();
   }
 
   stop() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+      window.removeEventListener("online", this.onlineListener);
       console.log("Sync engine stopped");
     }
   }
