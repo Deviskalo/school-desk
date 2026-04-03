@@ -1,0 +1,115 @@
+import { commonFields } from "./common";
+
+export const userSchema = {
+  title: "user schema",
+  version: 0,
+  description: "represents a user",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    email: { type: "string" },
+    name: { type: "string" },
+    role: { type: "string", enum: ["admin", "teacher", "student"] },
+    appwriteId: { type: "string" },
+  },
+  required: ["id", "email", "role"],
+};
+
+export const studentSchema = {
+  title: "student schema",
+  version: 0,
+  description: "represents a student",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    name: { type: "string" },
+    email: { type: "string" },
+    grade: { type: "string" },
+    teacherId: { type: "string" },
+  },
+  required: ["id", "name"],
+};
+
+export const teacherSchema = {
+  title: "teacher schema",
+  version: 0,
+  description: "represents a teacher",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    name: { type: "string" },
+    email: { type: "string" },
+    subject: { type: "string" },
+  },
+  required: ["id", "name"],
+};
+
+export const attendanceSchema = {
+  title: "attendance schema",
+  version: 0,
+  description: "represents attendance record",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    studentId: { type: "string" },
+    teacherId: { type: "string" },
+    date: { type: "string" }, // ISO string
+    status: { type: "string", enum: ["present", "absent", "late"] },
+  },
+  required: ["id", "studentId", "date", "status"],
+};
+
+export const gradeSchema = {
+  title: "grade schema",
+  version: 0,
+  description: "represents a grade record",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    studentId: { type: "string" },
+    subject: { type: "string" },
+    grade: { type: "string" },
+    date: { type: "string" },
+  },
+  required: ["id", "studentId", "subject", "grade"],
+};
+
+export const assignmentSchema = {
+  title: "assignment schema",
+  version: 0,
+  description: "represents an assignment",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    title: { type: "string" },
+    description: { type: "string" },
+    dueDate: { type: "string" },
+    teacherId: { type: "string" },
+    subject: { type: "string" },
+  },
+  required: ["id", "title", "teacherId"],
+};
+
+export const submissionSchema = {
+  title: "submission schema",
+  version: 0,
+  description: "represents an assignment submission",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    assignmentId: { type: "string" },
+    studentId: { type: "string" },
+    content: { type: "string" },
+    submittedAt: { type: "string" },
+    grade: { type: "string" },
+    feedback: { type: "string" },
+  },
+  required: ["id", "assignmentId", "studentId"],
+};

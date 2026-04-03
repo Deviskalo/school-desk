@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@database/*": ["database/*"],
+      "@sync/*": ["sync/*"],
+      "@appwrite/*": ["appwrite/*"],
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": [
+    "electron/**/*",
+    "database/**/*",
+    "sync/**/*",
+    "appwrite/**/*",
+    "shared/**/*"
+  ],
+  "exclude": ["node_modules", "renderer"]
+}
