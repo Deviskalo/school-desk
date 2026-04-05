@@ -11,6 +11,7 @@ import {
   gradeSchema,
   assignmentSchema,
   submissionSchema,
+  timetableSchema,
 } from "./schemas";
 
 import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
@@ -32,7 +33,7 @@ const migrationStrategies = {
 
 const createDB = async () => {
   const db = await createRxDatabase({
-    name: "schooldesk_db",
+    name: "schooldesk_db_v3",
     storage: getRxStorageDexie(),
     password: "myPassword", // Optional: Use a secure password in production
     multiInstance: true,
@@ -46,6 +47,7 @@ const createDB = async () => {
     grades: { schema: gradeSchema, migrationStrategies },
     assignments: { schema: assignmentSchema, migrationStrategies },
     submissions: { schema: submissionSchema, migrationStrategies },
+    timetable: { schema: timetableSchema, migrationStrategies },
   });
 
   return db;

@@ -2,7 +2,7 @@ import { commonFields } from "./common";
 
 export const userSchema = {
   title: "user schema",
-  version: 1,
+  version: 2,
   description: "represents a user",
   primaryKey: "id",
   type: "object",
@@ -18,7 +18,7 @@ export const userSchema = {
 
 export const studentSchema = {
   title: "student schema",
-  version: 1,
+  version: 2,
   description: "represents a student",
   primaryKey: "id",
   type: "object",
@@ -34,7 +34,7 @@ export const studentSchema = {
 
 export const teacherSchema = {
   title: "teacher schema",
-  version: 1,
+  version: 2,
   description: "represents a teacher",
   primaryKey: "id",
   type: "object",
@@ -49,7 +49,7 @@ export const teacherSchema = {
 
 export const attendanceSchema = {
   title: "attendance schema",
-  version: 1,
+  version: 2,
   description: "represents attendance record",
   primaryKey: "id",
   type: "object",
@@ -65,7 +65,7 @@ export const attendanceSchema = {
 
 export const gradeSchema = {
   title: "grade schema",
-  version: 1,
+  version: 2,
   description: "represents a grade record",
   primaryKey: "id",
   type: "object",
@@ -81,7 +81,7 @@ export const gradeSchema = {
 
 export const assignmentSchema = {
   title: "assignment schema",
-  version: 1,
+  version: 2,
   description: "represents an assignment",
   primaryKey: "id",
   type: "object",
@@ -98,7 +98,7 @@ export const assignmentSchema = {
 
 export const submissionSchema = {
   title: "submission schema",
-  version: 1,
+  version: 2,
   description: "represents an assignment submission",
   primaryKey: "id",
   type: "object",
@@ -112,4 +112,34 @@ export const submissionSchema = {
     feedback: { type: "string" },
   },
   required: ["id", "assignmentId", "studentId"],
+};
+
+export const timetableSchema = {
+  title: "timetable schema",
+  version: 2,
+  description: "represents a class schedule entry",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    day: {
+      type: "string",
+      enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    },
+    startTime: { type: "string" }, // HH:mm
+    endTime: { type: "string" }, // HH:mm
+    subject: { type: "string" },
+    room: { type: "string" },
+    teacherId: { type: "string" },
+    grade: { type: "string" }, // e.g. "12-A"
+  },
+  required: [
+    "id",
+    "day",
+    "startTime",
+    "endTime",
+    "subject",
+    "teacherId",
+    "grade",
+  ],
 };

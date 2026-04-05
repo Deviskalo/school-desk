@@ -8,9 +8,13 @@ import {
   Calendar,
   LogOut,
   UserPlus,
+  Cloud,
+  CloudOff,
+  RefreshCw,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { useSyncStatus } from "../hooks/useSyncStatus";
 import { ROLES } from "@shared/constants";
 
 const Sidebar: React.FC = () => {
@@ -104,7 +108,10 @@ const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t border-slate-800 space-y-4">
+        {/* Sync Status */}
+        <SyncIndicator />
+
         <button
           onClick={logout}
           className="flex items-center space-x-3 p-3 w-full rounded-lg text-slate-300 hover:bg-red-900/20 hover:text-red-400 transition-colors"
@@ -112,6 +119,54 @@ const Sidebar: React.FC = () => {
           <LogOut size={20} />
           <span className="font-medium">Sign Out</span>
         </button>
+      </div>
+    </div>
+  );
+};
+
+const SyncIndicator: React.FC = () => {
+  const status = useSyncStatus();
+
+  const configs = {
+    synced: {
+      icon: Cloud,
+      text: "Cloud Synced",
+      color: "text-green-400",
+      bg: "bg-green-500/10",
+      animate: "",
+    },
+    syncing: {
+      icon: RefreshCw,
+      text: "Syncing Data...",
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+      animate: "animate-spin",
+    },
+    error: {
+      icon: CloudOff,
+      text: "App Offline",
+      color: "text-orange-400",
+      bg: "bg-orange-500/10",
+      animate: "",
+    },
+  };
+
+  const { icon: Icon, text, color, bg, animate } = configs[status];
+
+  return (
+    <div
+      className={`flex items-center space-x-3 px-4 py-3 rounded-xl border border-slate-800 ${bg} transition-all duration-500`}
+    >
+      <Icon size={18} className={`${color} ${animate}`} />
+      <div className="flex-1">
+        <p
+          className={`text-[10px] font-bold uppercase tracking-widest ${color}`}
+        >
+          {text}
+        </p>
+        <p className="text-[9px] text-slate-500 font-medium">
+          Auto-backup active
+        </p>
       </div>
     </div>
   );

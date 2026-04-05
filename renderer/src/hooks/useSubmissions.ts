@@ -40,5 +40,17 @@ export const useSubmissions = (assignmentId?: string) => {
     });
   };
 
-  return { submissions, loading, submitAssignment };
+  const updateSubmission = async (id: string, data: any) => {
+    const db = await getDB();
+    const doc = await db.submissions.findOne(id).exec();
+    if (doc) {
+      await doc.patch({
+        ...data,
+        updatedAt: Date.now(),
+        synced: false,
+      });
+    }
+  };
+
+  return { submissions, loading, submitAssignment, updateSubmission };
 };

@@ -11,6 +11,10 @@ export class SyncEngine {
   collections: string[];
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private onlineListener: () => void;
+  private statusListeners: Array<
+    (status: "synced" | "syncing" | "error") => void
+  > = [];
+  public status: "synced" | "syncing" | "error" = "synced";
 
   constructor(collections: string[]) {
     this.collections = collections;
@@ -27,7 +31,7 @@ export class SyncEngine {
     // Listen for network changes
     window.addEventListener("online", this.onlineListener);
 
-    this.intervalId = setInterval(() => this.sync(), 30000);
+    this.intervalId = setInterval(() => this.sync(), 10000);
     this.sync();
   }
 
@@ -40,18 +44,36 @@ export class SyncEngine {
     }
   }
 
+  private setStatus(newStatus: "synced" | "syncing" | "error") {
+    this.status = newStatus;
+    this.statusListeners.forEach((l) => l(newStatus));
+  }
+
+  onStatusChange(listener: (status: "synced" | "syncing" | "error") => void) {
+    this.statusListeners.push(listener);
+    return () => {
+      this.statusListeners = this.statusListeners.filter((l) => l !== listener);
+    };
+  }
+
   async sync() {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine) {
+      this.setStatus("error");
+      return;
+    }
+    this.setStatus("syncing");
     console.log("[Sync] Starting sync cycle...");
 
-    for (const collection of this.collections) {
-      console.log(`[Sync] Processing collection: ${collection}`);
-      try {
+    try {
+      for (const collection of this.collections) {
+        console.log(`[Sync] Processing collection: ${collection}`);
         await this.push(collection);
         await this.pull(collection);
-      } catch (err: any) {
-        console.error(`[Sync] Cycle failed for ${collection}:`, err);
       }
+      this.setStatus("synced");
+    } catch (err: any) {
+      console.error(`[Sync] Cycle failed:`, err);
+      this.setStatus("error");
     }
     console.log("[Sync] Finished sync cycle.");
   }
@@ -175,4 +197,5 @@ export const syncEngine = new SyncEngine([
   "grades",
   "assignments",
   "submissions",
+  "timetable",
 ]);

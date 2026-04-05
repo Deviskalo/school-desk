@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAssignments } from "../../hooks/useAssignments";
 import { useTeachers } from "../../hooks/useTeachers";
 import { Plus, Clock } from "lucide-react";
@@ -9,6 +10,7 @@ const AssignmentList: React.FC = () => {
     loading: assignmentsLoading,
     addAssignment,
   } = useAssignments();
+  const navigate = useNavigate();
   const { teachers, loading: teachersLoading } = useTeachers();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAssignment, setNewAssignment] = useState({
@@ -98,7 +100,10 @@ const AssignmentList: React.FC = () => {
                     {getTeacherName(assignment.teacherId)}
                   </span>
                 </div>
-                <button className="text-orange-600 hover:text-orange-500 text-xs font-bold transition-colors">
+                <button
+                  onClick={() => navigate(`/assignments/${assignment.id}`)}
+                  className="text-orange-600 hover:text-orange-500 text-xs font-bold transition-colors"
+                >
                   View Details
                 </button>
               </div>
