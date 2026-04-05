@@ -20,6 +20,7 @@ import GradeList from "./pages/Grades/GradeList";
 import AssignmentList from "./pages/Assignments/AssignmentList";
 import MarkAttendance from "./pages/Attendance/MarkAttendance";
 import UserManagement from "./pages/Admin/UserManagement";
+import ActivateAccount from "./pages/Auth/ActivateAccount";
 
 const App: React.FC = () => {
   const { user, setUser, setLoading, loading } = useAuthStore();
@@ -49,7 +50,7 @@ const App: React.FC = () => {
       }
     };
     init();
-  }, [setUser, setLoading]);
+  }, [user, setUser, setLoading]);
 
   if (loading || setupNeeded === null) {
     return (
@@ -91,6 +92,8 @@ const App: React.FC = () => {
             )
           }
         />
+
+        <Route path="/activate" element={<ActivateAccount />} />
 
         <Route
           path="/login"

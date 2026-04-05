@@ -110,10 +110,18 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-slate-400 text-sm font-medium">
             SchoolDesk Offline-First Management System
           </p>
+          <div className="pt-4 border-t border-white/5">
+            <button
+              onClick={() => navigate("/activate")}
+              className="text-blue-400 hover:text-blue-300 text-sm font-bold flex items-center justify-center space-x-2 w-full transition-colors"
+            >
+              <span>Received an invitation? Activate Account</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

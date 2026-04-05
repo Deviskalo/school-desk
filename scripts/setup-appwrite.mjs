@@ -177,6 +177,7 @@ async function setup() {
     ["invited", "active"],
     false,
   );
+  await createStringAttr(DATABASE_ID, "students", "appwriteId");
   await createIntAttr(DATABASE_ID, "students", "createdAt");
   await createIntAttr(DATABASE_ID, "students", "updatedAt");
   await createBoolAttr(DATABASE_ID, "students", "synced", false, false);
@@ -194,6 +195,7 @@ async function setup() {
     ["invited", "active"],
     false,
   );
+  await createStringAttr(DATABASE_ID, "teachers", "appwriteId");
   await createIntAttr(DATABASE_ID, "teachers", "createdAt");
   await createIntAttr(DATABASE_ID, "teachers", "updatedAt");
   await createBoolAttr(DATABASE_ID, "teachers", "synced", false, false);

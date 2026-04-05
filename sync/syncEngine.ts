@@ -42,11 +42,18 @@ export class SyncEngine {
 
   async sync() {
     if (!navigator.onLine) return;
+    console.log("[Sync] Starting sync cycle...");
 
     for (const collection of this.collections) {
-      await this.push(collection);
-      await this.pull(collection);
+      console.log(`[Sync] Processing collection: ${collection}`);
+      try {
+        await this.push(collection);
+        await this.pull(collection);
+      } catch (err: any) {
+        console.error(`[Sync] Cycle failed for ${collection}:`, err);
+      }
     }
+    console.log("[Sync] Finished sync cycle.");
   }
 
   async push(collectionName: string) {
@@ -56,6 +63,12 @@ export class SyncEngine {
         selector: { synced: false },
       })
       .exec();
+
+    if (unsyncedDocs.length > 0) {
+      console.log(
+        `[Sync] Pushing ${unsyncedDocs.length} docs to ${collectionName}`,
+      );
+    }
 
     for (const doc of unsyncedDocs) {
       try {

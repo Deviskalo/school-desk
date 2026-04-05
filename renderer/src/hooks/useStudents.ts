@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { getDB } from "@database/rxdb";
-import { teams, ID } from "@appwrite/client";
 
 export const useStudents = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -27,17 +26,12 @@ export const useStudents = () => {
     const trimmedEmail = student.email?.trim();
 
     if (invite && trimmedEmail && navigator.onLine) {
-      console.log("Sending invitation to:", trimmedEmail, "Team:", "students");
       try {
-        await teams.createMembership(
-          "students",
-          ["student"],
-          `${window.location.origin}/setup`,
-          trimmedEmail,
-          ID.unique(),
-          undefined,
-          student.name,
-        );
+        await (window as any).electronAPI.sendInvitation({
+          email: trimmedEmail,
+          name: student.name,
+          role: "student",
+        });
       } catch (error) {
         console.error("Failed to send invitation:", error);
       }
