@@ -2,6 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { backfillAuditLogs } from "./utils/auditLogger";
+
+// Trigger one-time backfill for audit logs
+backfillAuditLogs();
 
 declare global {
   interface Window {

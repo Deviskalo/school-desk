@@ -11,7 +11,9 @@ import {
   Cloud,
   CloudOff,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSyncStatus } from "../hooks/useSyncStatus";
@@ -64,6 +66,12 @@ const Sidebar: React.FC = () => {
       icon: BookOpen,
       path: "/assignments",
       roles: [ROLES.ADMIN, ROLES.TEACHER, ROLES.STUDENT],
+    },
+    {
+      name: "Audit Log",
+      icon: ShieldCheck,
+      path: "/audit-log",
+      roles: [ROLES.ADMIN],
     },
   ];
 

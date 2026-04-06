@@ -22,6 +22,7 @@ import MarkAttendance from "./pages/Attendance/MarkAttendance";
 import UserManagement from "./pages/Admin/UserManagement";
 import ActivateAccount from "./pages/Auth/ActivateAccount";
 import AssignmentDetail from "./pages/Assignments/AssignmentDetail";
+import AuditLog from "./pages/Admin/AuditLog";
 
 const App: React.FC = () => {
   const { user, setUser, setLoading, loading } = useAuthStore();
@@ -128,6 +129,7 @@ const App: React.FC = () => {
           <Route path="/grades" element={<GradeList />} />
           <Route path="/assignments" element={<AssignmentList />} />
           <Route path="/assignments/:id" element={<AssignmentDetail />} />
+          <Route path="/audit-log" element={<AuditLog />} />
         </Route>
 
         <Route

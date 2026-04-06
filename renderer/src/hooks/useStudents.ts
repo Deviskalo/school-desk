@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getDB } from "@database/rxdb";
+import { logActivity } from "../utils/auditLogger";
 
 export const useStudents = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -44,6 +45,13 @@ export const useStudents = () => {
       synced: false,
       status: invite ? "invited" : "active",
       ...student,
+    });
+
+    await logActivity({
+      type: "student",
+      title: "Student Added",
+      subtitle: `${student.name} (${student.email || "No Email"})`,
+      targetId: studentId,
     });
   };
 

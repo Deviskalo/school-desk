@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getDB } from "@database/rxdb";
+import { logActivity } from "../utils/auditLogger";
 
 export const useTeachers = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -46,16 +47,31 @@ export const useTeachers = () => {
       status: invite ? "invited" : "active",
       ...teacher,
     });
+
+    await logActivity({
+      type: "teacher",
+      title: "Teacher Added",
+      subtitle: `${teacher.name} (${teacher.email || "No Email"})`,
+      targetId: teacherId,
+    });
   };
 
   const deleteTeacher = async (id: string) => {
     const db = await getDB();
     const doc = await db.teachers.findOne(id).exec();
     if (doc) {
+      const teacherData = doc.toJSON();
       await doc.patch({
         isDeleted: true,
         updatedAt: Date.now(),
         synced: false,
+      });
+
+      await logActivity({
+        type: "security",
+        title: "Teacher Removed",
+        subtitle: `${teacherData.name}`,
+        targetId: id,
       });
     }
   };

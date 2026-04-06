@@ -143,3 +143,25 @@ export const timetableSchema = {
     "grade",
   ],
 };
+
+export const auditLogSchema = {
+  title: "audit log schema",
+  version: 1,
+  description: "represents a system or security event",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    ...commonFields,
+    type: {
+      type: "string",
+      enum: ["security", "student", "teacher", "grade", "assignment", "system"],
+    },
+    title: { type: "string" },
+    subtitle: { type: "string" },
+    userId: { type: "string" },
+    userName: { type: "string" },
+    targetId: { type: "string" },
+    metadata: { type: "string" }, // JSON string
+  },
+  required: ["id", "type", "title", "createdAt"],
+};

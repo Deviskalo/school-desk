@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { logActivity } from "../utils/auditLogger";
 
 export interface UserAccount {
   $id: string;
@@ -35,6 +36,12 @@ export const useUsers = () => {
     setError(null);
     try {
       const newUser = await window.electronAPI.createUser(userData);
+      await logActivity({
+        type: "security",
+        title: `User Created: ${userData.role}`,
+        subtitle: `${userData.name} (${userData.email})`,
+        targetId: newUser.userId,
+      });
       await fetchUsers(); // Refresh list
       return newUser;
     } catch (err: any) {
@@ -53,6 +60,13 @@ export const useUsers = () => {
         userId,
         status: !currentStatus,
       });
+      const user = users.find((u) => u.$id === userId);
+      await logActivity({
+        type: "security",
+        title: currentStatus ? "Account Locked" : "Account Unlocked",
+        subtitle: user ? `${user.name} (${user.email})` : userId,
+        targetId: userId,
+      });
       await fetchUsers();
     } catch (err: any) {
       setError(err.message || "Failed to update user status");
@@ -63,9 +77,10 @@ export const useUsers = () => {
   };
 
   const deleteUser = async (userId: string) => {
+    const user = users.find((u) => u.$id === userId);
     if (
       !window.confirm(
-        "Are you sure you want to delete this user? This action cannot be undone.",
+        `Are you sure you want to delete ${user?.name || "this user"}? This action cannot be undone.`,
       )
     )
       return;
@@ -73,6 +88,12 @@ export const useUsers = () => {
     setError(null);
     try {
       await window.electronAPI.deleteUser(userId);
+      await logActivity({
+        type: "security",
+        title: "User Deleted",
+        subtitle: user ? `${user.name} (${user.email})` : userId,
+        targetId: userId,
+      });
       await fetchUsers();
     } catch (err: any) {
       setError(err.message || "Failed to delete user");

@@ -12,6 +12,7 @@ import {
   assignmentSchema,
   submissionSchema,
   timetableSchema,
+  auditLogSchema,
 } from "./schemas";
 
 import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
@@ -48,6 +49,7 @@ const createDB = async () => {
     assignments: { schema: assignmentSchema, migrationStrategies },
     submissions: { schema: submissionSchema, migrationStrategies },
     timetable: { schema: timetableSchema, migrationStrategies },
+    audit_logs: { schema: auditLogSchema, migrationStrategies },
   });
 
   return db;
