@@ -5,7 +5,7 @@ import { map } from "rxjs/operators";
 
 export interface Activity {
   id: string;
-  type: "student" | "teacher" | "grade" | "assignment";
+  type: "student" | "teacher" | "grade" | "assignment" | "security";
   title: string;
   subtitle: string;
   timestamp: number;
@@ -28,9 +28,10 @@ export const useRecentActivities = (limit = 5) => {
           .find()
           .sort({ createdAt: "desc" })
           .limit(limit).$,
+        users: db.users.find().sort({ createdAt: "desc" }).limit(limit).$,
       })
         .pipe(
-          map(({ students, teachers, grades, assignments }: any) => {
+          map(({ students, teachers, grades, assignments, users }: any) => {
             const all: Activity[] = [
               ...students.map((s: any) => ({
                 id: s.id,
@@ -60,6 +61,18 @@ export const useRecentActivities = (limit = 5) => {
                 subtitle: a.title,
                 timestamp: a.createdAt,
               })),
+              ...users
+                .filter((u: any) => u.role === "admin" || u.role === "teacher")
+                .map((u: any) => ({
+                  id: u.appwriteId || u.id,
+                  type: "security" as const,
+                  title:
+                    u.role === "admin"
+                      ? "Security: New Admin"
+                      : "Security: Teacher Account",
+                  subtitle: u.name || u.email,
+                  timestamp: u.createdAt || Date.now(),
+                })),
             ];
 
             return all

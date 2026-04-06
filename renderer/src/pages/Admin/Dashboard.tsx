@@ -6,14 +6,16 @@ import {
   TrendingUp,
   Calendar,
   Bell,
+  ShieldAlert,
 } from "lucide-react";
 import { useStudents } from "../../hooks/useStudents";
 import { useTeachers } from "../../hooks/useTeachers";
 import { useGrades } from "../../hooks/useGrades";
 import { useTimetable } from "../../hooks/useTimetable";
 import { useRecentActivities } from "../../hooks/useRecentActivities";
-import { useAuthStore } from "../../store/useAuthStore";
 import { format, formatDistanceToNow } from "date-fns";
+import { SecurityOverview } from "./components/SecurityOverview";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -187,8 +189,13 @@ const AdminDashboard: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Security & Health */}
+        <div className="lg:col-span-1">
+          <SecurityOverview />
+        </div>
+
         {/* Attendance Trends */}
-        <div className="lg:col-span-2 glass p-8 rounded-4xl shadow-sm flex flex-col border border-white/10">
+        <div className="lg:col-span-1 glass p-8 rounded-4xl shadow-sm flex flex-col border border-white/10">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-bold text-slate-800 dark:text-white">
@@ -198,35 +205,24 @@ const AdminDashboard: React.FC = () => {
                 Weekly system-wide engagement
               </p>
             </div>
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-              <button className="px-4 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 rounded-lg shadow-sm">
-                Week
-              </button>
-              <button className="px-4 py-1.5 text-xs font-bold text-slate-500">
-                Month
-              </button>
-            </div>
           </div>
 
-          <div className="flex-1 flex items-end space-x-3 pb-2 min-h-[200px]">
+          <div className="flex-1 flex items-end space-x-2 pb-2 min-h-[200px]">
             {[45, 60, 55, 80, 70, 90, 85].map((h, i) => (
               <div
                 key={i}
                 className="flex-1 flex flex-col items-center group cursor-pointer"
               >
                 <div
-                  className="w-full bg-blue-600/10 group-hover:bg-blue-600/20 transition-all rounded-2xl relative flex items-end"
+                  className="w-full bg-blue-600/10 group-hover:bg-blue-600/20 transition-all rounded-xl relative flex items-end"
                   style={{ height: `100%` }}
                 >
                   <div
-                    className="w-full bg-blue-600 rounded-2xl transition-all duration-700 ease-out shadow-lg shadow-blue-600/10 group-hover:shadow-blue-600/30"
+                    className="w-full bg-blue-600 rounded-xl transition-all duration-700 ease-out shadow-lg shadow-blue-600/10 group-hover:shadow-blue-600/30"
                     style={{ height: `${h}%` }}
                   />
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 font-bold border border-white/10 shadow-xl">
-                    {h}%
-                  </div>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-4 font-bold uppercase tracking-widest">
+                <span className="text-[8px] text-slate-400 mt-4 font-bold uppercase tracking-widest">
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}
                 </span>
               </div>
@@ -235,7 +231,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Recent Activities */}
-        <div className="glass p-8 rounded-4xl shadow-sm flex flex-col border border-white/10">
+        <div className="lg:col-span-1 glass p-8 rounded-4xl shadow-sm flex flex-col border border-white/10">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white">
               Recent Feed
@@ -261,24 +257,33 @@ const AdminDashboard: React.FC = () => {
                   className="flex items-center space-x-4 p-4 hover:bg-white/50 dark:hover:bg-white/5 rounded-3xl transition-all border border-transparent hover:border-white/10 group"
                 >
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${
+                    className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg ${
                       activity.type === "student"
                         ? "bg-blue-500 shadow-blue-500/20"
                         : activity.type === "teacher"
                           ? "bg-purple-500 shadow-purple-500/20"
                           : activity.type === "grade"
                             ? "bg-green-500 shadow-green-500/20"
-                            : "bg-orange-500 shadow-orange-500/20"
+                            : activity.type === "security"
+                              ? "bg-slate-900 shadow-slate-900/20"
+                              : "bg-orange-500 shadow-orange-500/20"
                     }`}
                   >
-                    <TrendingUp size={20} />
+                    {activity.type === "security" ? (
+                      <ShieldAlert size={16} className="text-blue-500" />
+                    ) : (
+                      <TrendingUp size={16} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                    <p
+                      className={`text-sm font-bold truncate ${
+                        activity.type === "security"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-slate-800 dark:text-white"
+                      }`}
+                    >
                       {activity.title}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {activity.subtitle}
                     </p>
                     <p className="text-[10px] font-medium text-slate-400 mt-1 uppercase tracking-widest">
                       {formatDistanceToNow(activity.timestamp, {

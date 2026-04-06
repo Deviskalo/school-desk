@@ -10,6 +10,21 @@ declare global {
       createUser: (userData: any) => Promise<any>;
       listUsers: () => Promise<any[]>;
       checkSetupNeeded: () => Promise<boolean>;
+      updateUserStatus: (data: {
+        userId: string;
+        status: boolean;
+      }) => Promise<any>;
+      deleteUser: (userId: string) => Promise<any>;
+      sendInvitation: (data: {
+        email: string;
+        name: string;
+        role: string;
+      }) => Promise<any>;
+      verifyActivation: (data: {
+        email: string;
+        token: string;
+      }) => Promise<any>;
+      activateUser: (data: any) => Promise<any>;
     };
   }
 }

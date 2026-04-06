@@ -67,17 +67,6 @@ app.on("window-all-closed", () => {
 // IPC Handlers
 ipcMain.handle("get-version", () => app.getVersion());
 
-ipcMain.handle("list-users", async () => {
-  if (!process.env.VITE_APPWRITE_API_KEY) throw new Error("API Key missing.");
-  try {
-    const response = await users.list();
-    return response.users;
-  } catch (error) {
-    console.error("Error listing users:", error);
-    throw error;
-  }
-});
-
 ipcMain.handle("send-invitation", async (_, { email, name, role }) => {
   const token = Math.random().toString(36).substring(2, 15);
   const activationLink = `http://localhost:5173/activate?token=${token}&email=${encodeURIComponent(email)}`;
@@ -178,12 +167,17 @@ async function handleActivateUser({ email, password, name, role, id }: any) {
     );
     await users.updatePrefs(user.$id, { role });
 
-    const collection = role === "student" ? "students" : "teachers";
-    await databases.updateDocument(APPWRITE_DATABASE_ID, collection, id, {
-      status: "active",
-      appwriteId: user.$id,
-      updatedAt: Date.now(),
-    });
+    // Only update the role-specific collection document when a pre-existing
+    // local document id is supplied (teachers/students activation flow).
+    // Admin accounts are created fresh with no prior document.
+    if (id && role !== "admin") {
+      const collection = role === "student" ? "students" : "teachers";
+      await databases.updateDocument(APPWRITE_DATABASE_ID, collection, id, {
+        status: "active",
+        appwriteId: user.$id,
+        updatedAt: Date.now(),
+      });
+    }
 
     return { success: true, userId: user.$id };
   } catch (error: any) {
@@ -191,6 +185,36 @@ async function handleActivateUser({ email, password, name, role, id }: any) {
     throw error;
   }
 }
+
+ipcMain.handle("list-users", async () => {
+  try {
+    const list = await users.list();
+    return list.users;
+  } catch (error: any) {
+    console.error("List Users Error:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("update-user-status", async (_, { userId, status }) => {
+  try {
+    await users.updateStatus(userId, status);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Status Error:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("delete-user", async (_, userId) => {
+  try {
+    await users.delete(userId);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete User Error:", error);
+    throw error;
+  }
+});
 
 ipcMain.handle("check-setup-needed", async () => {
   if (!process.env.VITE_APPWRITE_API_KEY) return true;

@@ -7,17 +7,44 @@ const APPWRITE_DATABASE_ID =
     ? process.env.VITE_APPWRITE_DATABASE_ID
     : (import.meta as any).env?.VITE_APPWRITE_DATABASE_ID) || "schooldesk";
 
+export interface SyncStats {
+  lastSyncTime: number | null;
+  collections: Record<
+    string,
+    {
+      lastPushCount: number;
+      lastPullCount: number;
+      lastError: string | null;
+    }
+  >;
+}
+
 export class SyncEngine {
   collections: string[];
+  public status: "synced" | "syncing" | "error" = "synced";
+  public stats: SyncStats = {
+    lastSyncTime: null,
+    collections: {},
+  };
+
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private onlineListener: () => void;
   private statusListeners: Array<
     (status: "synced" | "syncing" | "error") => void
   > = [];
-  public status: "synced" | "syncing" | "error" = "synced";
+  private statsListeners: Array<(stats: SyncStats) => void> = [];
+  private unavailableCollections: Set<string> = new Set();
 
   constructor(collections: string[]) {
     this.collections = collections;
+    this.collections.forEach((c) => {
+      this.stats.collections[c] = {
+        lastPushCount: 0,
+        lastPullCount: 0,
+        lastError: null,
+      };
+    });
+
     this.onlineListener = () => {
       console.log("[Sync] Back online, triggering sync...");
       this.sync();
@@ -27,10 +54,7 @@ export class SyncEngine {
   async start() {
     if (this.intervalId) return;
     console.log("Sync engine started");
-
-    // Listen for network changes
     window.addEventListener("online", this.onlineListener);
-
     this.intervalId = setInterval(() => this.sync(), 10000);
     this.sync();
   }
@@ -49,10 +73,22 @@ export class SyncEngine {
     this.statusListeners.forEach((l) => l(newStatus));
   }
 
+  private notifyStats() {
+    this.statsListeners.forEach((l) => l({ ...this.stats }));
+  }
+
   onStatusChange(listener: (status: "synced" | "syncing" | "error") => void) {
     this.statusListeners.push(listener);
     return () => {
       this.statusListeners = this.statusListeners.filter((l) => l !== listener);
+    };
+  }
+
+  onStatsChange(listener: (stats: SyncStats) => void) {
+    this.statsListeners.push(listener);
+    listener({ ...this.stats });
+    return () => {
+      this.statsListeners = this.statsListeners.filter((l) => l !== listener);
     };
   }
 
@@ -62,23 +98,28 @@ export class SyncEngine {
       return;
     }
     this.setStatus("syncing");
-    console.log("[Sync] Starting sync cycle...");
+    this.unavailableCollections.clear();
 
     try {
       for (const collection of this.collections) {
-        console.log(`[Sync] Processing collection: ${collection}`);
+        this.stats.collections[collection].lastError = null;
         await this.push(collection);
         await this.pull(collection);
       }
+      this.stats.lastSyncTime = Date.now();
       this.setStatus("synced");
     } catch (err: any) {
       console.error(`[Sync] Cycle failed:`, err);
       this.setStatus("error");
+    } finally {
+      this.notifyStats();
     }
-    console.log("[Sync] Finished sync cycle.");
   }
 
   async push(collectionName: string) {
+    // Skip collections already flagged as unavailable in this sync cycle
+    if (this.unavailableCollections.has(collectionName)) return;
+
     const db = await getDB();
     const unsyncedDocs = await db[collectionName]
       .find({
@@ -86,16 +127,17 @@ export class SyncEngine {
       })
       .exec();
 
-    if (unsyncedDocs.length > 0) {
-      console.log(
-        `[Sync] Pushing ${unsyncedDocs.length} docs to ${collectionName}`,
-      );
-    }
+    this.stats.collections[collectionName].lastPushCount = unsyncedDocs.length;
 
     for (const doc of unsyncedDocs) {
+      if (this.unavailableCollections.has(collectionName)) break;
       try {
         const data = doc.toJSON();
-        const { id, synced, ...payload } = data;
+        // Strip RxDB-internal fields (prefixed with _) and sync metadata
+        const { id, synced, ...rest } = data;
+        const payload = Object.fromEntries(
+          Object.entries(rest).filter(([k]) => !k.startsWith("_")),
+        );
 
         try {
           await databases.updateDocument(
@@ -104,30 +146,52 @@ export class SyncEngine {
             id,
             { ...payload, updatedAt: Date.now() },
           );
-        } catch (error: any) {
-          if (error.code === 404) {
-            await databases.createDocument(
-              APPWRITE_DATABASE_ID,
-              collectionName,
-              id,
-              { ...payload, updatedAt: Date.now() },
-            );
+        } catch (updateError: any) {
+          // A 404 can mean the document doesn't exist (create it) OR the
+          // collection doesn't exist (abort — don't fire a POST either).
+          if (updateError.code === 404) {
+            const isCollectionMissing =
+              updateError?.message?.includes(
+                "Collection with the requested ID",
+              ) ||
+              updateError?.message?.includes("Database with the requested ID");
+            if (isCollectionMissing) {
+              this.unavailableCollections.add(collectionName);
+              this.stats.collections[collectionName].lastError =
+                "Appwrite collection not configured";
+              return;
+            }
+            try {
+              await databases.createDocument(
+                APPWRITE_DATABASE_ID,
+                collectionName,
+                id,
+                { ...payload, updatedAt: Date.now() },
+              );
+            } catch (createError: any) {
+              const isCollectionUnavailable =
+                createError?.message?.includes(
+                  "Collection with the requested ID",
+                ) ||
+                createError?.message?.includes(
+                  "Database with the requested ID",
+                ) ||
+                createError?.message?.includes("Attribute");
+              if (isCollectionUnavailable) {
+                this.unavailableCollections.add(collectionName);
+                this.stats.collections[collectionName].lastError =
+                  "Appwrite collection not ready";
+                return;
+              }
+              throw createError;
+            }
           } else {
-            throw error;
+            throw updateError;
           }
         }
-
         await doc.patch({ synced: true });
       } catch (error: any) {
-        // If the database itself is missing, don't spam — stop syncing
-        if (error?.message?.includes("Database with the requested ID")) {
-          console.warn(
-            `[Sync] Appwrite database '${APPWRITE_DATABASE_ID}' not found. ` +
-              `Please create it in the Appwrite Console. Sync paused.`,
-          );
-          this.stop();
-          return;
-        }
+        this.stats.collections[collectionName].lastError = error.message;
         console.error(`Error pushing to ${collectionName}:`, error);
       }
     }
@@ -142,8 +206,10 @@ export class SyncEngine {
         [Query.orderDesc("updatedAt"), Query.limit(100)],
       );
 
+      this.stats.collections[collectionName].lastPullCount =
+        response.documents.length;
+
       for (const remoteDoc of response.documents) {
-        // Separate metadata from actual data
         const {
           $id,
           $collectionId,
@@ -172,18 +238,18 @@ export class SyncEngine {
         }
       }
     } catch (error: any) {
-      // Stop spamming if the Appwrite DB/collections don't exist yet
-      if (
-        error?.message?.includes("Database with the requested ID") ||
-        error?.message?.includes("Collection with the requested ID")
-      ) {
-        console.warn(
-          `[Sync] Appwrite not ready (${collectionName}): ${error.message}. ` +
-            `Create the database and collections in the Appwrite Console.`,
-        );
-        this.stop();
+      const isCollectionMissing =
+        error?.message?.includes("Collection with the requested ID") ||
+        error?.message?.includes("Database with the requested ID");
+      if (isCollectionMissing) {
+        if (!this.unavailableCollections.has(collectionName)) {
+          this.unavailableCollections.add(collectionName);
+          this.stats.collections[collectionName].lastError =
+            "Appwrite collection not configured";
+        }
         return;
       }
+      this.stats.collections[collectionName].lastError = error.message;
       console.error(`Error pulling from ${collectionName}:`, error);
     }
   }

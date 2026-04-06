@@ -11,7 +11,15 @@ import {
 import { ROLES } from "@shared/constants";
 
 const UserManagement: React.FC = () => {
-  const { users, loading, error, fetchUsers, createUser } = useUsers();
+  const {
+    users,
+    loading,
+    error,
+    fetchUsers,
+    createUser,
+    toggleUserStatus,
+    deleteUser,
+  } = useUsers();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
@@ -148,9 +156,30 @@ const UserManagement: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-500 transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() =>
+                            toggleUserStatus(user.$id, user.status)
+                          }
+                          className={`p-2 rounded-lg transition-colors ${
+                            user.status
+                              ? "text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                              : "text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+                          }`}
+                          title={
+                            user.status ? "Lock Account" : "Unlock Account"
+                          }
+                        >
+                          <Shield size={18} />
+                        </button>
+                        <button
+                          onClick={() => deleteUser(user.$id)}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="Delete User"
+                        >
+                          <MoreVertical size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

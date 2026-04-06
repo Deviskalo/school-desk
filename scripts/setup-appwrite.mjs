@@ -260,6 +260,26 @@ async function setup() {
   await createBoolAttr(DATABASE_ID, "submissions", "synced", false, false);
   await createBoolAttr(DATABASE_ID, "submissions", "isDeleted", false, false);
 
+  // 9. Timetable
+  await createCollection("timetable", "Timetable");
+  await createEnumAttr(
+    DATABASE_ID,
+    "timetable",
+    "day",
+    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    true,
+  );
+  await createStringAttr(DATABASE_ID, "timetable", "startTime", true);
+  await createStringAttr(DATABASE_ID, "timetable", "endTime", true);
+  await createStringAttr(DATABASE_ID, "timetable", "subject", true);
+  await createStringAttr(DATABASE_ID, "timetable", "room");
+  await createStringAttr(DATABASE_ID, "timetable", "teacherId", true);
+  await createStringAttr(DATABASE_ID, "timetable", "grade", true);
+  await createIntAttr(DATABASE_ID, "timetable", "createdAt");
+  await createIntAttr(DATABASE_ID, "timetable", "updatedAt");
+  await createBoolAttr(DATABASE_ID, "timetable", "synced", false, false);
+  await createBoolAttr(DATABASE_ID, "timetable", "isDeleted", false, false);
+
   console.log("\n🎉 Setup complete! All collections are ready.\n");
 }
 

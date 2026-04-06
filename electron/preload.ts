@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   createUser: (userData: any) => ipcRenderer.invoke("create-user", userData),
   listUsers: () => ipcRenderer.invoke("list-users"),
   checkSetupNeeded: () => ipcRenderer.invoke("check-setup-needed"),
+  updateUserStatus: (data: { userId: string; status: boolean }) =>
+    ipcRenderer.invoke("update-user-status", data),
+  deleteUser: (userId: string) => ipcRenderer.invoke("delete-user", userId),
   // SMTP & Activation
   sendInvitation: (data: { email: string; name: string; role: string }) =>
     ipcRenderer.invoke("send-invitation", data),

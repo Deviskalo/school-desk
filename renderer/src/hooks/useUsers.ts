@@ -45,11 +45,50 @@ export const useUsers = () => {
     }
   };
 
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await window.electronAPI.updateUserStatus({
+        userId,
+        status: !currentStatus,
+      });
+      await fetchUsers();
+    } catch (err: any) {
+      setError(err.message || "Failed to update user status");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this user? This action cannot be undone.",
+      )
+    )
+      return;
+    setLoading(true);
+    setError(null);
+    try {
+      await window.electronAPI.deleteUser(userId);
+      await fetchUsers();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete user");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     users,
     loading,
     error,
     fetchUsers,
     createUser,
+    toggleUserStatus,
+    deleteUser,
   };
 };
