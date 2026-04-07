@@ -12,16 +12,20 @@ import {
   CloudOff,
   RefreshCw,
   ShieldCheck,
+  Settings,
+  FileText,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSyncStatus } from "../hooks/useSyncStatus";
+import { useSchoolSettings } from "../hooks/useSchoolSettings";
 import { ROLES } from "@shared/constants";
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { settings } = useSchoolSettings();
   const role = (user?.prefs as any)?.role || ROLES.STUDENT;
 
   const menuItems = [
@@ -73,6 +77,18 @@ const Sidebar: React.FC = () => {
       path: "/audit-log",
       roles: [ROLES.ADMIN],
     },
+    {
+      name: "Reports",
+      icon: FileText,
+      path: "/reports",
+      roles: [ROLES.ADMIN],
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/settings",
+      roles: [ROLES.ADMIN],
+    },
   ];
 
   const filteredItems = menuItems.filter((item) => item.roles.includes(role));
@@ -82,15 +98,16 @@ const Sidebar: React.FC = () => {
       <div className="p-6">
         <div className="flex items-center space-x-3 mb-1">
           <img
-            src="/logo.png"
+            src={settings.logoUrl}
             alt="SchoolDesk Logo"
             className="w-8 h-8 object-contain"
           />
-          <h1 className="text-2xl font-bold tracking-tight text-blue-400">
-            SchoolDesk
+
+          <h1 className="text-xl font-black tracking-tight text-white leading-tight">
+            {settings.schoolName}
           </h1>
         </div>
-        <p className="text-slate-200 text-xs font-semibold uppercase tracking-widest pl-11">
+        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest pl-11">
           {role}
         </p>
       </div>

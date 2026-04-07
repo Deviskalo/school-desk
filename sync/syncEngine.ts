@@ -264,4 +264,6 @@ export const syncEngine = new SyncEngine([
   "assignments",
   "submissions",
   "timetable",
+  "audit_logs",
+  "school_settings",
 ]);

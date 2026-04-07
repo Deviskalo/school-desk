@@ -300,6 +300,28 @@ async function setup() {
   await createBoolAttr(DATABASE_ID, "audit_logs", "synced", false, false);
   await createBoolAttr(DATABASE_ID, "audit_logs", "isDeleted", false, false);
 
+  // 11. School Settings
+  await createCollection("school_settings", "School Settings");
+  await createStringAttr(DATABASE_ID, "school_settings", "schoolName", true);
+  await createStringAttr(DATABASE_ID, "school_settings", "academicYear");
+  await createStringAttr(
+    DATABASE_ID,
+    "school_settings",
+    "gradingScale",
+    false,
+    1000,
+  );
+  await createIntAttr(DATABASE_ID, "school_settings", "createdAt");
+  await createIntAttr(DATABASE_ID, "school_settings", "updatedAt");
+  await createBoolAttr(DATABASE_ID, "school_settings", "synced", false, false);
+  await createBoolAttr(
+    DATABASE_ID,
+    "school_settings",
+    "isDeleted",
+    false,
+    false,
+  );
+
   console.log("\n🎉 Setup complete! All collections are ready.\n");
 }
 

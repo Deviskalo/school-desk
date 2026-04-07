@@ -1,23 +1,47 @@
 import React, { useState } from "react";
 import { useGrades } from "../../hooks/useGrades";
 import { useStudents } from "../../hooks/useStudents";
-import { Plus, Search, Filter, TrendingUp, BookOpen } from "lucide-react";
+import { useSchoolSettings } from "../../hooks/useSchoolSettings";
+import {
+  Plus,
+  Search,
+  Filter,
+  TrendingUp,
+  BookOpen,
+  Calculator,
+} from "lucide-react";
 
 const GradeList: React.FC = () => {
   const { grades, loading: gradesLoading, addGrade } = useGrades();
   const { students, loading: studentsLoading } = useStudents();
+  const { settings } = useSchoolSettings();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGrade, setNewGrade] = useState({
     studentId: "",
     subject: "",
-    grade: "",
+    grade: "", // This will store the final string (e.g. "A" or "85 (B)")
+    score: "", // Optional numeric score
   });
+
+  const getLetterGrade = (score: number) => {
+    const { A, B, C, D } = settings.gradingScale;
+    if (score >= A) return "A";
+    if (score >= B) return "B";
+    if (score >= C) return "C";
+    if (score >= D) return "D";
+    return "F";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addGrade(newGrade);
+    await addGrade({
+      ...newGrade,
+      grade: newGrade.score
+        ? `${newGrade.score} (${getLetterGrade(Number(newGrade.score))})`
+        : newGrade.grade,
+    });
     setShowAddModal(false);
-    setNewGrade({ studentId: "", subject: "", grade: "" });
+    setNewGrade({ studentId: "", subject: "", grade: "", score: "" });
   };
 
   const calculateGPA = () => {
@@ -210,21 +234,56 @@ const GradeList: React.FC = () => {
                   placeholder="Biology"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium text-slate-500 mb-1 block">
-                  Grade (e.g. A, 95, 4.0)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newGrade.grade}
-                  onChange={(e) =>
-                    setNewGrade({ ...newGrade, grade: e.target.value })
-                  }
-                  className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-green-500 transition-all outline-none"
-                  placeholder="A"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-500 mb-1 block">
+                    Score (0-100)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={newGrade.score}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewGrade({
+                        ...newGrade,
+                        score: val,
+                        grade: val ? getLetterGrade(Number(val)) : "",
+                      });
+                    }}
+                    className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-green-500 transition-all outline-none font-bold"
+                    placeholder="85"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-500 mb-1 block">
+                    Letter Grade
+                  </label>
+                  <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-3 px-4 text-slate-900 dark:text-white font-black text-center text-xl shadow-inner">
+                    {newGrade.score
+                      ? getLetterGrade(Number(newGrade.score))
+                      : newGrade.grade || "-"}
+                  </div>
+                </div>
               </div>
+
+              {!newGrade.score && (
+                <div>
+                  <label className="text-sm font-medium text-slate-500 mb-1 block">
+                    Manual Grade (if no score)
+                  </label>
+                  <input
+                    type="text"
+                    value={newGrade.grade}
+                    onChange={(e) =>
+                      setNewGrade({ ...newGrade, grade: e.target.value })
+                    }
+                    className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-green-500 transition-all outline-none"
+                    placeholder="e.g. Pass, A+, Exc"
+                  />
+                </div>
+              )}
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"

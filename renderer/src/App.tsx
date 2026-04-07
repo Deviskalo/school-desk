@@ -23,10 +23,26 @@ import UserManagement from "./pages/Admin/UserManagement";
 import ActivateAccount from "./pages/Auth/ActivateAccount";
 import AssignmentDetail from "./pages/Assignments/AssignmentDetail";
 import AuditLog from "./pages/Admin/AuditLog";
+import SchoolSettings from "./pages/Admin/Settings";
+import Reports from "./pages/Admin/Reports";
+
+import { useSchoolSettings } from "./hooks/useSchoolSettings";
 
 const App: React.FC = () => {
   const { user, setUser, setLoading, loading } = useAuthStore();
+  const { settings } = useSchoolSettings();
   const [setupNeeded, setSetupNeeded] = useState<boolean | null>(null);
+
+  // Helper to get RGB from Hex
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+      : "37, 99, 235";
+  };
+
+  const primaryColor = settings.primaryColor || "#2563eb";
+  const primaryRgb = hexToRgb(primaryColor);
 
   useEffect(() => {
     const init = async () => {
@@ -81,67 +97,101 @@ const App: React.FC = () => {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* First-run setup */}
-        <Route
-          path="/setup"
-          element={
-            setupNeeded ? (
-              <InitialSetup onSetupComplete={() => setSetupNeeded(false)} />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+    <div data-brand-primary={primaryColor} className="min-h-screen">
+      <BrowserRouter>
+        {/* Dynamic Branding Styles */}
+        <style>
+          {`
+            :root {
+              --brand-primary: ${primaryColor};
+              --brand-primary-rgb: ${primaryRgb};
+              --brand-primary-hover: ${primaryColor}dd;
+            }
+            
+            /* Global Utility Overrides */
+            [data-brand-primary] .bg-blue-600, [data-brand-primary] .bg-green-600 { background-color: var(--brand-primary) !important; }
+            [data-brand-primary] .hover\\:bg-blue-500:hover, [data-brand-primary] .hover\\:bg-green-500:hover { background-color: var(--brand-primary-hover) !important; }
+            [data-brand-primary] .text-blue-600, [data-brand-primary] .text-green-600 { color: var(--brand-primary) !important; }
+            [data-brand-primary] .text-blue-500, [data-brand-primary] .text-green-500 { color: var(--brand-primary) !important; }
+            [data-brand-primary] .text-blue-400, [data-brand-primary] .text-green-400 { color: var(--brand-primary) !important; }
+            [data-brand-primary] .border-blue-500, [data-brand-primary] .border-green-500 { border-color: var(--brand-primary) !important; }
+            [data-brand-primary] .border-blue-600, [data-brand-primary] .border-green-600 { border-color: var(--brand-primary) !important; }
+            [data-brand-primary] .shadow-blue-600\\/20, [data-brand-primary] .shadow-green-500\\/20 { --tw-shadow-color: rgba(var(--brand-primary-rgb), 0.2) !important; }
+            
+            /* Active states in Sidebar */
+            [data-brand-primary] .bg-blue-600.text-white { background-color: var(--brand-primary) !important; }
 
-        <Route path="/activate" element={<ActivateAccount />} />
+            /* Glass overrides */
+            [data-brand-primary] .glass { border-color: rgba(var(--brand-primary-rgb), 0.2) !important; }
 
-        <Route
-          path="/login"
-          element={
-            setupNeeded ? (
-              <Navigate to="/setup" />
-            ) : !user ? (
-              <Login />
-            ) : (
-              <Navigate to="/dashboard" />
-            )
-          }
-        />
+            /* Focus states */
+            [data-brand-primary] .focus\\:ring-blue-500:focus { --tw-ring-color: var(--brand-primary) !important; }
+          `}
+        </style>
 
-        <Route
-          element={
-            user ? (
-              <DashboardLayout />
-            ) : (
-              <Navigate to={setupNeeded ? "/setup" : "/login"} />
-            )
-          }
-        >
-          <Route path="/dashboard" element={getDashboard()} />
+        <Routes>
+          {/* First-run setup */}
+          <Route
+            path="/setup"
+            element={
+              setupNeeded ? (
+                <InitialSetup onSetupComplete={() => setSetupNeeded(false)} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
 
-          {/* Module routes */}
-          <Route path="/students" element={<StudentList />} />
-          <Route path="/teachers" element={<TeacherList />} />
-          <Route path="/attendance" element={<MarkAttendance />} />
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/grades" element={<GradeList />} />
-          <Route path="/assignments" element={<AssignmentList />} />
-          <Route path="/assignments/:id" element={<AssignmentDetail />} />
-          <Route path="/audit-log" element={<AuditLog />} />
-        </Route>
+          <Route path="/activate" element={<ActivateAccount />} />
 
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to={setupNeeded ? "/setup" : user ? "/dashboard" : "/login"}
-            />
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+          <Route
+            path="/login"
+            element={
+              setupNeeded ? (
+                <Navigate to="/setup" />
+              ) : !user ? (
+                <Login />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+
+          <Route
+            element={
+              user ? (
+                <DashboardLayout />
+              ) : (
+                <Navigate to={setupNeeded ? "/setup" : "/login"} />
+              )
+            }
+          >
+            <Route path="/dashboard" element={getDashboard()} />
+
+            {/* Module routes */}
+            <Route path="/students" element={<StudentList />} />
+            <Route path="/teachers" element={<TeacherList />} />
+            <Route path="/attendance" element={<MarkAttendance />} />
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/grades" element={<GradeList />} />
+            <Route path="/assignments" element={<AssignmentList />} />
+            <Route path="/assignments/:id" element={<AssignmentDetail />} />
+            <Route path="/audit-log" element={<AuditLog />} />
+            <Route path="/settings" element={<SchoolSettings />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
+
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to={setupNeeded ? "/setup" : user ? "/dashboard" : "/login"}
+              />
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 };
 

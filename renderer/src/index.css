@@ -4,6 +4,11 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  /* Brand Theme Variables */
+  --brand-primary: #2563eb;
+  --brand-primary-rgb: 37, 99, 235;
+  --brand-primary-hover: #1d4ed8;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -165,3 +165,29 @@ export const auditLogSchema = {
   },
   required: ["id", "type", "title", "createdAt"],
 };
+
+export const schoolSettingsSchema = {
+  title: "school settings schema",
+  version: 2,
+  description: "represents school-wide configuration settings",
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    id: { type: "string", maxLength: 100 },
+    schoolName: { type: "string" },
+    academicYear: { type: "string" },
+    gradingScale: { type: "string" }, // JSON string: {A: 90, B: 80, C: 70, D: 60}
+    address: { type: "string" },
+    phone: { type: "string" },
+    email: { type: "string" },
+    currency: { type: "string" },
+    timezone: { type: "string" },
+    logoUrl: { type: "string" },
+    primaryColor: { type: "string" },
+    createdAt: { type: "number" },
+    updatedAt: { type: "number" },
+    synced: { type: "boolean" },
+    isDeleted: { type: "boolean" },
+  },
+  required: ["id", "schoolName"],
+};

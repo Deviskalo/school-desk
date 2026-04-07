@@ -13,6 +13,7 @@ import {
   submissionSchema,
   timetableSchema,
   auditLogSchema,
+  schoolSettingsSchema,
 } from "./schemas";
 
 import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
@@ -24,7 +25,7 @@ addRxPlugin(RxDBMigrationPlugin);
 
 let dbPromise: Promise<any> | null = null;
 
-const migrationStrategies = {
+const commonMigrationStrategies = {
   1: (oldDoc: any) => {
     oldDoc.isDeleted = oldDoc.deleted || false;
     delete oldDoc.deleted;
@@ -32,32 +33,78 @@ const migrationStrategies = {
   },
 };
 
+const schoolSettingsMigrationStrategies = {
+  ...commonMigrationStrategies,
+  2: (oldDoc: any) => {
+    if (!oldDoc.logoUrl) oldDoc.logoUrl = "/logo.png";
+    if (!oldDoc.primaryColor) oldDoc.primaryColor = "#2563eb";
+    return oldDoc;
+  },
+};
+
 const createDB = async () => {
   const db = await createRxDatabase({
-    name: "schooldesk_db_v3",
+    name: "schooldesk_db_v4",
     storage: getRxStorageDexie(),
-    password: "myPassword", // Optional: Use a secure password in production
+    password: "myPassword",
     multiInstance: true,
   });
 
   await db.addCollections({
-    users: { schema: userSchema, migrationStrategies },
-    students: { schema: studentSchema, migrationStrategies },
-    teachers: { schema: teacherSchema, migrationStrategies },
-    attendance: { schema: attendanceSchema, migrationStrategies },
-    grades: { schema: gradeSchema, migrationStrategies },
-    assignments: { schema: assignmentSchema, migrationStrategies },
-    submissions: { schema: submissionSchema, migrationStrategies },
-    timetable: { schema: timetableSchema, migrationStrategies },
-    audit_logs: { schema: auditLogSchema, migrationStrategies },
+    users: {
+      schema: userSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    students: {
+      schema: studentSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    teachers: {
+      schema: teacherSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    attendance: {
+      schema: attendanceSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    grades: {
+      schema: gradeSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    assignments: {
+      schema: assignmentSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    submissions: {
+      schema: submissionSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    timetable: {
+      schema: timetableSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    audit_logs: {
+      schema: auditLogSchema,
+      migrationStrategies: commonMigrationStrategies,
+    },
+    school_settings: {
+      schema: schoolSettingsSchema,
+      migrationStrategies: schoolSettingsMigrationStrategies,
+    },
   });
 
   return db;
 };
 
-export const getDB = () => {
-  if (!dbPromise) {
-    dbPromise = createDB();
+export const getDB = async () => {
+  if (dbPromise) {
+    const db = await dbPromise;
+    if (db.destroyed) {
+      dbPromise = null;
+    } else {
+      return db;
+    }
   }
+  dbPromise = createDB();
   return dbPromise;
 };
