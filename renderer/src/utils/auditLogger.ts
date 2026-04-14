@@ -34,17 +34,27 @@ export const logActivity = async (params: {
 export const backfillAuditLogs = async () => {
   try {
     const db = await getDB();
+    console.log("Starting Audit Log backfill...");
+
+    // CLEANUP: Remove any existing logs with IDs > 36 chars (Appwrite limit)
+    const allLogs = await db.audit_logs.find().exec();
+    const invalidLogs = allLogs.filter((l: any) => l.id.length > 36);
+    if (invalidLogs.length > 0) {
+      console.log(`Cleaning up ${invalidLogs.length} invalid audit log IDs...`);
+      await Promise.all(invalidLogs.map((l: any) => l.remove()));
+    }
+
     const existingCount = await db.audit_logs.count().exec();
     if (existingCount > 0) return; // Only backfill if empty
-
-    console.log("Starting Audit Log backfill...");
     const logs: any[] = [];
 
     // 1. Students
     const students = await db.students.find().exec();
     students.forEach((s: any) => {
+      // Appwrite limit is 36 chars. "bfs-" is 4 chars.
+      const safeId = `bfs-${s.id}`.slice(0, 36);
       logs.push({
-        id: `backfill-student-${s.id}`,
+        id: safeId,
         type: "student",
         title: "New Student",
         subtitle: s.name,
@@ -58,8 +68,9 @@ export const backfillAuditLogs = async () => {
     // 2. Teachers
     const teachers = await db.teachers.find().exec();
     teachers.forEach((t: any) => {
+      const safeId = `bft-${t.id}`.slice(0, 36);
       logs.push({
-        id: `backfill-teacher-${t.id}`,
+        id: safeId,
         type: "teacher",
         title: "New Teacher",
         subtitle: t.name,
@@ -75,8 +86,9 @@ export const backfillAuditLogs = async () => {
       .find({ selector: { role: { $eq: "admin" } } })
       .exec();
     users.forEach((u: any) => {
+      const safeId = `bfa-${u.id}`.slice(0, 36);
       logs.push({
-        id: `backfill-admin-${u.id}`,
+        id: safeId,
         type: "security",
         title: "Security: New Admin",
         subtitle: u.name || u.email,

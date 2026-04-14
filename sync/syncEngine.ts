@@ -189,7 +189,7 @@ export class SyncEngine {
             throw updateError;
           }
         }
-        await doc.patch({ synced: true });
+        await doc.atomicPatch({ synced: true });
       } catch (error: any) {
         this.stats.collections[collectionName].lastError = error.message;
         console.error(`Error pushing to ${collectionName}:`, error);

@@ -12,7 +12,14 @@
  *   - VITE_APPWRITE_API_KEY in .env  (needs databases.write scope)
  */
 
-import { Client, Databases, Permission, Role, ID } from "node-appwrite";
+import {
+  Client,
+  Databases,
+  Storage,
+  Permission,
+  Role,
+  ID,
+} from "node-appwrite";
 import { readFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -51,6 +58,7 @@ const client = new Client()
   .setKey(API_KEY);
 
 const db = new Databases(client);
+const storageClient = new Storage(client);
 
 // ─── Default permissions: any authenticated user can read/write ───────────────
 const permissions = [
@@ -311,6 +319,19 @@ async function setup() {
     false,
     1000,
   );
+  await createStringAttr(DATABASE_ID, "school_settings", "address", false, 500);
+  await createStringAttr(DATABASE_ID, "school_settings", "phone");
+  await createStringAttr(DATABASE_ID, "school_settings", "email");
+  await createStringAttr(DATABASE_ID, "school_settings", "currency");
+  await createStringAttr(DATABASE_ID, "school_settings", "timezone");
+  await createStringAttr(
+    DATABASE_ID,
+    "school_settings",
+    "logoUrl",
+    false,
+    1000,
+  );
+  await createStringAttr(DATABASE_ID, "school_settings", "primaryColor");
   await createIntAttr(DATABASE_ID, "school_settings", "createdAt");
   await createIntAttr(DATABASE_ID, "school_settings", "updatedAt");
   await createBoolAttr(DATABASE_ID, "school_settings", "synced", false, false);
@@ -322,7 +343,52 @@ async function setup() {
     false,
   );
 
-  console.log("\n🎉 Setup complete! All collections are ready.\n");
+  // 12. Storage — School Logos bucket
+  console.log("\n  Setting up Storage bucket: school-logos");
+  const bucketPermissions = [
+    Permission.read(Role.any()),
+    Permission.create(Role.users()),
+    Permission.update(Role.users()),
+    Permission.delete(Role.users()),
+  ];
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+  const maxFileSize = 5 * 1024 * 1024; // 5 MB
+
+  try {
+    await storageClient.createBucket(
+      "school-logos",
+      "School Logos",
+      bucketPermissions,
+      false, // fileSecurity
+      true, // enabled
+      maxFileSize,
+      allowedExtensions,
+    );
+    console.log("  ✅ Storage bucket created: school-logos");
+  } catch (e) {
+    if (e.code === 409) {
+      // Already exists — update it to correct the allowed extensions
+      console.log("  ~ Bucket exists, updating allowed extensions...");
+      try {
+        await storageClient.updateBucket(
+          "school-logos",
+          "School Logos",
+          bucketPermissions,
+          false,
+          true,
+          maxFileSize,
+          allowedExtensions,
+        );
+        console.log("  ✅ Storage bucket updated: school-logos");
+      } catch (updateErr) {
+        console.error("  ⚠️  Could not update bucket:", updateErr.message);
+      }
+    } else {
+      throw e;
+    }
+  }
+
+  console.log("\n🎉 Setup complete! All collections and storage are ready.\n");
 }
 
 setup().catch((e) => {

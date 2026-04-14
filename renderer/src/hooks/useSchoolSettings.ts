@@ -44,7 +44,10 @@ export const useSchoolSettings = () => {
                 schoolName: doc.schoolName || DEFAULT_SETTINGS.schoolName,
                 academicYear: doc.academicYear || DEFAULT_SETTINGS.academicYear,
                 gradingScale: doc.gradingScale
-                  ? JSON.parse(doc.gradingScale)
+                  ? {
+                      ...DEFAULT_SETTINGS.gradingScale,
+                      ...JSON.parse(doc.gradingScale),
+                    }
                   : DEFAULT_SETTINGS.gradingScale,
                 address: doc.address || "",
                 phone: doc.phone || "",

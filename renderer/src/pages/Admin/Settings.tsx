@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Settings,
   Save,
@@ -18,13 +18,18 @@ import {
   useSchoolSettings,
   type SchoolSettings,
 } from "../../hooks/useSchoolSettings";
+import { useLogoUpload } from "../../hooks/useLogoUpload";
+import { Upload, Link } from "lucide-react";
 
 const gradeKeys = ["A", "B", "C", "D"] as const;
 
 const SchoolSettingsPage: React.FC = () => {
   const { settings, loading, saving, saveSettings } = useSchoolSettings();
+  const { uploadLogo, uploading, uploadError } = useLogoUpload();
   const [form, setForm] = useState<SchoolSettings>(settings);
   const [saved, setSaved] = useState(false);
+  const [logoMode, setLogoMode] = useState<"upload" | "url">("upload");
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForm(settings);
@@ -87,7 +92,7 @@ const SchoolSettingsPage: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={form.schoolName}
+                value={form.schoolName || ""}
                 onChange={(e) =>
                   setForm({ ...form, schoolName: e.target.value })
                 }
@@ -104,7 +109,7 @@ const SchoolSettingsPage: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={form.academicYear}
+                value={form.academicYear || ""}
                 onChange={(e) =>
                   setForm({ ...form, academicYear: e.target.value })
                 }
@@ -214,26 +219,104 @@ const SchoolSettingsPage: React.FC = () => {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
                 <Image size={12} className="inline mr-1" />
-                Logo URL
+                School Logo
               </label>
+
+              {/* Mode toggle */}
+              <div className="flex items-center space-x-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setLogoMode("upload")}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    logoMode === "upload"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500"
+                  }`}
+                >
+                  <Upload size={11} />
+                  <span>Upload File</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogoMode("url")}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    logoMode === "url"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500"
+                  }`}
+                >
+                  <Link size={11} />
+                  <span>Use URL</span>
+                </button>
+              </div>
+
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
-                  <img
-                    src={form.logoUrl || "/logo.png"}
-                    alt="Logo Preview"
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => (e.currentTarget.src = "/logo.png")}
-                  />
+                {/* Preview */}
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 relative">
+                  {uploading ? (
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <img
+                      src={form.logoUrl || "/logo.png"}
+                      alt="Logo Preview"
+                      className="w-12 h-12 object-contain"
+                      onError={(e) => (e.currentTarget.src = "/logo.png")}
+                    />
+                  )}
                 </div>
-                <input
-                  type="text"
-                  value={form.logoUrl || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, logoUrl: e.target.value })
-                  }
-                  className="flex-1 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono text-xs"
-                  placeholder="https://example.com/logo.png"
-                />
+
+                {logoMode === "upload" ? (
+                  <div className="flex-1">
+                    <input
+                      key="logo-upload-input"
+                      ref={logoFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const url = await uploadLogo(file);
+                        if (url) setForm({ ...form, logoUrl: url });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => logoFileInputRef.current?.click()}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-slate-500 hover:border-blue-500 hover:text-blue-500 transition-all text-sm font-medium disabled:opacity-50"
+                    >
+                      <Upload size={16} />
+                      <span>
+                        {uploading ? "Uploading..." : "Click to upload logo"}
+                      </span>
+                    </button>
+                    {uploadError && (
+                      <p className="text-xs text-red-500 mt-1.5 font-medium">
+                        {uploadError}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-slate-400 mt-1.5">
+                      JPG, PNG, WebP or SVG · Max 5 MB
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <input
+                      key="logo-url-input"
+                      type="text"
+                      value={form.logoUrl || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, logoUrl: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono text-xs"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1.5">
+                      Paste a publicly accessible image URL.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -285,7 +368,7 @@ const SchoolSettingsPage: React.FC = () => {
                     type="number"
                     min={0}
                     max={100}
-                    value={form.gradingScale[grade]}
+                    value={form.gradingScale[grade] ?? 0}
                     onChange={(e) =>
                       setForm({
                         ...form,

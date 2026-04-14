@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Users,
   UserCheck,
@@ -14,6 +14,7 @@ import {
   Search,
   ArrowRight,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { QuickActions } from "./components/QuickActions";
 import { UpcomingSchedule } from "./components/UpcomingSchedule";
 
@@ -27,9 +28,15 @@ import { format, formatDistanceToNow } from "date-fns";
 import { SecurityOverview } from "./components/SecurityOverview";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useAnalytics } from "../../hooks/useAnalytics";
+import { useGlobalSearch } from "../../hooks/useGlobalSearch";
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const { results: searchResults } = useGlobalSearch(searchQuery);
   const { students } = useStudents();
   const { teachers } = useTeachers();
   const { grades } = useGrades();
@@ -42,6 +49,24 @@ const AdminDashboard: React.FC = () => {
     loading: analyticsLoading,
   } = useAnalytics();
   const { settings } = useSchoolSettings();
+
+  // Close search dropdown on click outside or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   const seedTimetable = async () => {
     if (teachers.length === 0) {
@@ -164,16 +189,77 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4 flex-1 max-w-md mx-6">
-          <div className="relative w-full group">
+          <div ref={searchRef} className="relative w-full group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors z-10"
               size={18}
             />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchOpen(e.target.value.length >= 2);
+              }}
+              onFocus={() => searchQuery.length >= 2 && setSearchOpen(true)}
               placeholder="Search students, teachers, or classes..."
               className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
             />
+
+            {/* Search Results Dropdown */}
+            {searchOpen && searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                {searchResults.map((result) => (
+                  <button
+                    key={`${result.type}-${result.id}`}
+                    onClick={() => {
+                      navigate(result.route);
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left group/result"
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 ${
+                        result.type === "student"
+                          ? "bg-blue-500"
+                          : "bg-purple-500"
+                      }`}
+                    >
+                      {result.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                        {result.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">
+                        {result.subtitle}
+                      </p>
+                    </div>
+                    <ArrowRight
+                      size={14}
+                      className="text-slate-300 group-hover/result:text-blue-500 transition-colors shrink-0"
+                    />
+                  </button>
+                ))}
+                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    {searchResults.length} result
+                    {searchResults.length !== 1 ? "s" : ""} found
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {searchOpen &&
+              searchQuery.length >= 2 &&
+              searchResults.length === 0 && (
+                <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 px-4 py-6 text-center">
+                  <p className="text-sm text-slate-400 font-medium">
+                    No results for "{searchQuery}"
+                  </p>
+                </div>
+              )}
           </div>
         </div>
         <div className="flex items-center space-x-4">
